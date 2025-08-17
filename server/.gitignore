@@ -1,0 +1,31 @@
+# Node modules
+node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Misc
+*.local
+*.cache
+*.log
+coverage/
+
+# Ignore uploads (if any)
+uploads/
+
+# Ignore production build
+out/

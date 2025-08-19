@@ -1,4 +1,12 @@
+# Cloudinary Integration
+
+This project uses Cloudinary for file uploads and storage. Uploaded files are stored securely in the cloud, ensuring compatibility with platforms like Render that have ephemeral filesystems.
+
 # Task Management App
+
+> **Live Demo:**
+> - **Frontend (Vercel):** [https://raghav-task-management.vercel.app/auth/login](https://raghav-task-management.vercel.app/auth/login)
+> - **Backend:** Deployed on Render. _Note: The backend server may take 30–60 seconds to start if it has been idle, as Render free tier spins down inactive services._
 
 A full-stack task management application built with React (Vite, TypeScript, Tailwind CSS) for the frontend and Node.js (Express, MongoDB) for the backend. The project is fully containerized using Docker and supports local development and production deployment.
 

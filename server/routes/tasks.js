@@ -4,11 +4,7 @@ const taskController = require('../controllers/taskController');
 const auth = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
-// All routes require authentication
-
-// All routes except attachments require authentication
 router.use((req, res, next) => {
-  // Allow public access to GET /attachments/:filename
   if (req.method === 'GET' && req.path.startsWith('/attachments/')) {
     return next();
   }
@@ -34,11 +30,10 @@ router.delete('/:id/attachments/:fileName', async (req, res) => {
     if (attachmentIndex === -1) {
       return res.status(404).json({ error: 'Attachment not found.' });
     }
-    const path = require('path');
-    const fs = require('fs');
-    const filePath = path.join(__dirname, '..', 'uploads', fileName);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    const cloudinary = require('../utils/cloudinary');
+    const publicId = task.attachments[attachmentIndex].public_id;
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
     }
     task.attachments.splice(attachmentIndex, 1);
     await task.save();
@@ -58,11 +53,34 @@ router.post('/:id/attachments', upload.array('files', 3), async (req, res) => {
       return res.status(403).json({ error: 'Access denied.' });
     }
 
-    const files = req.files.map(file => ({
-      fileName: file.filename,
-      fileSize: file.size,
-      uploadedAt: new Date()
-    }));
+    const cloudinary = require('../utils/cloudinary');
+    const files = [];
+    for (const file of req.files) {
+      const uploadRes = await cloudinary.uploader.upload_stream({
+        resource_type: 'auto',
+        folder: 'task-attachments'
+      }, (error, result) => {
+        if (error) throw error;
+        return result;
+      });
+      await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({
+          resource_type: 'auto',
+          folder: 'task-attachments'
+        }, (error, result) => {
+          if (error) return reject(error);
+          files.push({
+            fileName: result.original_filename,
+            fileSize: file.size,
+            url: result.secure_url,
+            public_id: result.public_id,
+            uploadedAt: new Date()
+          });
+          resolve();
+        });
+        stream.end(file.buffer);
+      });
+    }
 
     task.attachments = [...(task.attachments || []), ...files];
     await task.save();
@@ -73,17 +91,20 @@ router.post('/:id/attachments', upload.array('files', 3), async (req, res) => {
   }
 });
 
-const path = require('path');
-const fs = require('fs');
+
+// Download endpoint: just return the Cloudinary URL for the file
 router.get('/attachments/:filename', async (req, res) => {
   try {
-    const filePath = path.join(__dirname, '..', 'uploads', req.params.filename);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found.' });
-    }
-    res.sendFile(filePath);
+    const Task = require('../models/taskModel');
+    // Find the task that has this attachment
+    const task = await Task.findOne({ 'attachments.fileName': req.params.filename });
+    if (!task) return res.status(404).json({ error: 'File not found.' });
+    const attachment = (task.attachments || []).find(att => att.fileName === req.params.filename);
+    if (!attachment || !attachment.url) return res.status(404).json({ error: 'File not found.' });
+    // Redirect to Cloudinary URL
+    res.redirect(attachment.url);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to download file.' });
+    res.status(500).json({ error: 'Failed to get file.' });
   }
 });
 

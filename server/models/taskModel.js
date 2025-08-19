@@ -12,6 +12,8 @@ const taskSchema = new mongoose.Schema({
     {
       fileName: String,
       fileSize: Number,
+      url: String,
+      public_id: String,
       uploadedAt: { type: Date, default: Date.now }
     }
   ],

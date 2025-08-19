@@ -121,8 +121,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
 
   const dueDateStatus = getDueDateStatus(task.dueDate);
 
-
-  // PDF Preview Modal
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string>('');
 
@@ -157,7 +155,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
       size="xl"
     >
       <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
-        {/* Header with Actions */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0">
           <div className="flex-1">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">{task.title}</h2>
@@ -202,7 +199,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
 
   {/* Details Grid */}
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-          {/* Due Date */}
           <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
             <div className="flex items-center mb-1 sm:mb-2">
               <Calendar className="w-5 h-5 text-gray-400 mr-2" />
@@ -211,7 +207,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
             <p className="text-base sm:text-lg font-semibold text-gray-700">{formatDate(task.dueDate)}</p>
           </div>
 
-          {/* Assigned Users (show 2 max, then +x more, popup for full list) */}
           <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 relative">
             <div className="flex items-center mb-1 sm:mb-2">
               <User className="w-5 h-5 text-gray-400 mr-2" />
@@ -222,7 +217,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
                 <AssignedUsersPopup assignedTo={task.assignedTo} />
               ) : (
                 (() => {
-                  // For non-admin, show only their own info if present (handle both string and object)
                   let self = null;
                   if (Array.isArray(task.assignedTo)) {
                     self = task.assignedTo.find((u: any) => {
@@ -332,7 +326,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
                 </div>
               ))}
             </div>
-            {/* PDF Preview Modal */}
             <Modal
               isOpen={!!previewUrl}
               onClose={() => setPreviewUrl(null)}

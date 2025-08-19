@@ -102,8 +102,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onView }) =
         </div>
       </div>
 
-
-      {/* Metadata */}
       <div className="space-y-2 text-sm">
         {/* Due Date */}
         <div className="flex items-center text-gray-500">

@@ -18,7 +18,6 @@ const AuthRoutes: React.FC = () => {
   const auth = useAuth();
   const user = auth?.user;
 
-  // If already logged in, redirect to dashboard
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -38,7 +37,6 @@ const AuthRoutes: React.FC = () => {
   );
 };
 
-// Protected route wrapper
 const ProtectedRoute: React.FC<{ adminOnly?: boolean }> = ({ adminOnly = false }) => {
   const auth = useAuth();
   const user = auth?.user;
@@ -57,7 +55,6 @@ const ProtectedRoute: React.FC<{ adminOnly?: boolean }> = ({ adminOnly = false }
   }
 
   if (!user) {
-    // If not logged in, prevent access to protected routes
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 

@@ -41,8 +41,6 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange, onReload })
         )}
       </div>
 
-
-      {/* First row: Search bar only */}
       <div className="flex flex-col md:flex-row gap-4 mb-2">
         <div className="flex-1">
           <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
@@ -64,7 +62,6 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange, onReload })
         </div>
       </div>
 
-  {/* Second row: All other filters, justified and responsive */}
   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
         {/* Status Filter */}
         <div>

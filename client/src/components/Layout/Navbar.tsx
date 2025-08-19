@@ -36,12 +36,9 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            {/* Logo */}
             <div className="flex-shrink-0 flex items-center">
               <h1 className="text-xl font-semibold text-gray-900">Task Manager</h1>
             </div>
-
-            {/* Desktop Navigation */}
             <div className="hidden md:ml-8 md:flex md:space-x-8">
               {navigationItems.map(item => {
                 const Icon = item.icon;
@@ -63,7 +60,6 @@ const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* Profile Menu */}
           <div className="flex items-center">
             <div className="relative">
               <button
@@ -84,7 +80,6 @@ const Navbar: React.FC = () => {
                 </div>
               </button>
 
-              {/* Profile Dropdown */}
               {isProfileOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                   <div className="py-1" role="menu" aria-orientation="vertical">
@@ -105,7 +100,6 @@ const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* Mobile menu button */}
             <div className="md:hidden ml-4">
               <button
                 type="button"
@@ -121,7 +115,6 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
@@ -147,7 +140,6 @@ const Navbar: React.FC = () => {
         </div>
       )}
 
-      {/* Click outside handler for profile menu */}
       {isProfileOpen && (
         <div
           className="fixed inset-0 z-30"

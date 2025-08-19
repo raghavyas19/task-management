@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSocket } from '../../hooks/useSocket';
 import { Plus, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Task, TaskFilters, TaskSort } from '../../types';
 import { TASK_STATUSES, TASK_PRIORITIES } from '../../utils/constants';
@@ -52,6 +53,12 @@ const Dashboard: React.FC = () => {
     };
     fetchTasks();
   }, [user, reload]);
+
+  useSocket({
+    taskCreated: () => setReload(r => !r),
+    taskUpdated: () => setReload(r => !r),
+    taskDeleted: () => setReload(r => !r),
+  });
 
   const filteredTasks = useMemo(() => {
     let filtered = tasks;
@@ -197,7 +204,7 @@ const Dashboard: React.FC = () => {
           addToast({ type: 'error', title: 'Delete Failed', message: data.error || 'Failed to delete task.' });
         } else {
           addToast({ type: 'success', title: 'Task Deleted', message: 'Task deleted successfully.' });
-          setReload(r => !r); // reload tasks
+          setReload(r => !r);
         }
       } catch (err) {
         addToast({ type: 'error', title: 'Delete Failed', message: 'Failed to delete task.' });
@@ -466,12 +473,11 @@ const Dashboard: React.FC = () => {
           isOpen={isTaskFormOpen}
           onClose={async () => {
             setIsTaskFormOpen(false);
-            // After closing, refetch the selected task to get latest attachments
             if (selectedTask) {
               const latest = await fetchTaskById(selectedTask.id || (selectedTask as any)._id);
               setSelectedTask(latest || selectedTask);
             }
-            setReload(r => !r); // reload tasks after form closes
+            setReload(r => !r);
           }}
         />
       )}

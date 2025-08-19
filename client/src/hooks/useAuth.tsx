@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  // On mount, fetch latest user info if logged in
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const token = localStorage.getItem('token');
@@ -34,18 +33,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(freshUser);
             localStorage.setItem('user', JSON.stringify(freshUser));
           } else {
-            // If user not found or token invalid, logout
             logout();
           }
         } catch (err) {
-          // On error, logout
           console.error('[useAuth] Error fetching user:', err);
           logout();
         }
       }
     };
     fetchCurrentUser();
-    // eslint-disable-next-line
   }, []);
   const [isLoading, setIsLoading] = useState(false);
 

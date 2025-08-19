@@ -159,7 +159,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
       let res, data;
       let updatedTaskId = null;
       if (task) {
-        // Update task (support both id and _id)
         const taskId = task.id || (task as any)._id;
         res = await fetch(`${API_URL}/tasks/${taskId}`, {
           method: 'PUT',
@@ -185,7 +184,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
 
       if (!res.ok) throw new Error(data.error || 'Failed to save task.');
 
-      // Handle file upload if files exist and task created/updated
       if (!task && files.length > 0 && data._id) {
         await uploadFiles(data._id);
         updatedTaskId = data._id;
@@ -194,7 +192,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
         await uploadFiles(taskId);
       }
 
-      // After update, delete any attachments marked for deletion
       if (updatedTaskId && pendingDelete.length > 0) {
         for (const fileName of pendingDelete) {
           try {
@@ -225,7 +222,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
     }
   };
 
-  // Helper to upload files to backend
   const uploadFiles = async (taskId: string) => {
     const token = localStorage.getItem('token');
     const form = new FormData();
@@ -248,14 +244,12 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-    // Only allow up to 3 files in total (existing + new)
     const allowed = Math.max(0, 3 - existingAttachments.length);
     setFiles(selectedFiles.slice(0, allowed));
     if (errors.files) {
       setErrors(prev => ({ ...prev, files: '' }));
     }
   };
-  // Mark an existing attachment for deletion (UI only)
   const removeExistingAttachment = (index: number) => {
     const attachment = existingAttachments[index];
   if (!attachment) return;
@@ -263,7 +257,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
   setExistingAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Download and preview for existing attachments
   const handleFileDownload = (attachment: any) => {
     const url = `${API_URL}/tasks/attachments/${attachment.fileName}`;
     const link = document.createElement('a');
@@ -380,7 +373,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Due Date and Assign To Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
@@ -469,7 +461,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* File Upload & Attachments */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <Upload className="w-4 h-4 inline mr-1" />
@@ -504,7 +495,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
             <p className="mt-1 text-sm text-red-600">{errors.files}</p>
           )}
 
-          {/* Existing Attachments (for update) */}
           {existingAttachments.length > 0 && (
             <div className="mt-4 space-y-2">
               {existingAttachments.map((attachment, index) => (
@@ -548,7 +538,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
             </div>
           )}
 
-          {/* New Files List */}
           {files.length > 0 && (
             <div className="mt-4 space-y-2">
               {files.map((file, index) => (
@@ -585,7 +574,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
             </div>
           )}
 
-          {/* PDF Preview Modal */}
           <Modal
             isOpen={!!previewUrl}
             onClose={() => setPreviewUrl(null)}
@@ -604,7 +592,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
           </Modal>
         </div>
 
-        {/* Form Actions */}
         <div className="flex justify-end space-x-3 pt-6">
           <button
             type="button"

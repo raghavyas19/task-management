@@ -24,7 +24,6 @@ const UserManagement: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -32,10 +31,8 @@ const UserManagement: React.FC = () => {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Fetch users from backend
   useEffect(() => {
     fetchUsers();
-    // eslint-disable-next-line
   }, []);
 
   const fetchUsers = async () => {
@@ -74,14 +71,13 @@ const UserManagement: React.FC = () => {
   const openEditForm = (user: User) => {
     setFormData({
       email: user.email,
-      password: '', // Don't pre-fill password for security
+      password: '',
       role: user.role
     });
     setErrors({});
     setSelectedUser(user);
     setIsUserFormOpen(true);
   };
-  // Persist modal state to localStorage
   useEffect(() => {
     localStorage.setItem('userMgmtIsUserFormOpen', String(isUserFormOpen));
   }, [isUserFormOpen]);
@@ -403,9 +399,6 @@ const UserManagement: React.FC = () => {
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
             )}
           </div>
-
-          {/* Password field removed as requested */}
-
           {/* Role */}
           <div>
             <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
@@ -454,7 +447,6 @@ const UserManagement: React.FC = () => {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <Modal
           isOpen={!!deleteConfirm}

@@ -22,6 +22,8 @@ mongoose.connect(mongoUri, {
 });
 
 const app = express();
+const http = require('http');
+const { Server } = require('socket.io');
 const PORT = 5000;
 
 app.use(cors({
@@ -34,6 +36,29 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api', apiRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  },
 });
+
+// Socket.IO events for real-time task updates
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Make io accessible in routes/controllers
+app.set('io', io);
+
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = { app, server };

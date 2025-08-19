@@ -137,7 +137,19 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
 
   const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
   const handleFilePreview = (attachment: any) => {
-    const url = attachment.url || `${API_URL}/tasks/attachments/${attachment.fileName}`;
+    let url = attachment.url || `${API_URL}/tasks/attachments/${attachment.fileName}`;
+    // If the url is a relative path (starts with /uploads/), prepend the server base URL
+    if (url.startsWith('/uploads/')) {
+      // Remove trailing /api if present in API_URL
+      const base = API_URL.replace(/\/api$/, '');
+      url = base + url;
+    }
+    console.log('Previewing attachment:', {
+      fileName: attachment.fileName,
+      url,
+      originalUrl: attachment.url,
+      fallbackUrl: `${API_URL}/tasks/attachments/${attachment.fileName}`
+    });
     if (isMobile()) {
       window.open(url, '_blank');
     } else {

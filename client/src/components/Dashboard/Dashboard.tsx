@@ -342,6 +342,7 @@ const Dashboard: React.FC = () => {
                       ) : null}
                     </span>
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned By</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -387,6 +388,16 @@ const Dashboard: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">{new Date(task.createdAt).toLocaleDateString()}</td>
+                      {/* Assigned By (Admin) */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {task.createdBy && typeof task.createdBy === 'object' && task.createdBy.role === 'admin' ? (
+                          <span className="inline-flex items-center bg-green-50 text-green-700 rounded-full px-2 py-0.5 text-xs font-medium">
+                            {task.createdBy.email}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <button
                           onClick={e => { e.stopPropagation(); handleEditTask(task); }}

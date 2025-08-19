@@ -14,7 +14,7 @@ export interface Task {
   dueDate: string;
   assignedTo: string[];
   assignedUser?: User | User[];
-  createdBy: string;
+  createdBy: string | User;
   createdAt: string;
   updatedAt: string;
   attachments?: TaskAttachment[];

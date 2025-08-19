@@ -102,6 +102,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onView }) =
         </div>
       </div>
 
+
       {/* Metadata */}
       <div className="space-y-2 text-sm">
         {/* Due Date */}
@@ -120,6 +121,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onView }) =
                 ))
               : <span>{task.assignedUser.email}</span>
             }
+          </div>
+        )}
+
+        {/* Assigned By (Admin) */}
+        {task.createdBy && typeof task.createdBy === 'object' && task.createdBy.role === 'admin' && (
+          <div className="flex items-center text-gray-500">
+            <User className="w-4 h-4 mr-2" />
+            <span>Assigned by: {task.createdBy.email}</span>
           </div>
         )}
 

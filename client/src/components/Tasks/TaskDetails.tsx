@@ -200,8 +200,8 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
           <p className="text-gray-700 text-sm sm:text-base whitespace-pre-wrap">{task.description}</p>
         </div>
 
-        {/* Details Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+  {/* Details Grid */}
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
           {/* Due Date */}
           <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
             <div className="flex items-center mb-1 sm:mb-2">
@@ -257,6 +257,14 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
               )
             ) : (
               <p className="text-xs sm:text-sm text-gray-500">No users assigned</p>
+            )}
+
+            {/* Assigned By (Admin) */}
+            {task.createdBy && typeof task.createdBy === 'object' && task.createdBy.role === 'admin' && (
+              <div className="flex items-center mt-2">
+                <User className="w-4 h-4 text-green-600 mr-2" />
+                <span className="text-xs sm:text-sm text-green-700">Assigned by: {task.createdBy.email}</span>
+              </div>
             )}
           </div>
 

@@ -19,13 +19,9 @@ A full-stack task management application built with React (Vite, TypeScript, Tai
 ---
 
 ## Features
-- User authentication (register/login)
-- Task CRUD (create, read, update, delete)
-- User management (admin)
-- Filtering and searching tasks
-- Responsive UI with Tailwind CSS
-- Toast notifications and modals
-- File uploads (for task attachments)
+
+> **Note:**
+> In a real-world system, roles(admin or user) would not be selected by users at registration, but for demo purposes a dropdown is provided during registration for better preview of both roles.
 
 ---
 

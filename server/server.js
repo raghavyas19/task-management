@@ -27,7 +27,8 @@ const { Server } = require('socket.io');
 const PORT = 5000;
 
 app.use(cors({
-  origin: '*',
+  origin: 'https://raghav-task-management.vercel.app',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -39,12 +40,12 @@ app.use('/api', apiRoutes);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: 'https://raghav-task-management.vercel.app',
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   },
 });
 
-// Socket.IO events for real-time task updates
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
   socket.on('disconnect', () => {
@@ -52,7 +53,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Make io accessible in routes/controllers
 app.set('io', io);
 
 if (process.env.NODE_ENV !== 'test') {

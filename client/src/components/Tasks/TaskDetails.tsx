@@ -125,7 +125,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
   const [previewFileName, setPreviewFileName] = useState<string>('');
 
   const handleFileDownload = (attachment: any) => {
-    const url = `${API_URL}/tasks/attachments/${attachment.fileName}`;
+    const url = attachment.url || `${API_URL}/tasks/attachments/${attachment.fileName}`;
     const link = document.createElement('a');
     link.href = url;
     link.download = attachment.fileName;
@@ -137,7 +137,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onEdit
 
   const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
   const handleFilePreview = (attachment: any) => {
-    const url = `${API_URL}/tasks/attachments/${attachment.fileName}`;
+    const url = attachment.url || `${API_URL}/tasks/attachments/${attachment.fileName}`;
     if (isMobile()) {
       window.open(url, '_blank');
     } else {

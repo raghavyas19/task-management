@@ -25,6 +25,7 @@ export interface TaskAttachment {
   fileName: string;
   fileSize: number;
   uploadedAt: string;
+  url?: string;
 }
 
 export interface TaskFilters {

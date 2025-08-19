@@ -2,23 +2,22 @@ import React, { useState } from 'react';
 import { Menu, X, User, LogOut, Users, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-interface NavbarProps {
-  currentPage: string;
-  onNavigate: (page: string) => void;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
+const Navbar: React.FC = () => {
   const auth = useAuth();
   if (!auth) throw new Error('useAuth must be used within an AuthProvider');
+
   const { user, logout } = auth;
   const { addToast } = useToast();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    ...(user?.role === 'admin' ? [{ id: 'users', label: 'Users', icon: Users }] : [])
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ...(user?.role === 'admin' ? [{ path: '/users', label: 'Users', icon: Users }] : [])
   ];
 
   const handleLogout = () => {
@@ -29,11 +28,11 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
       title: 'Logged out',
       message: 'You have been successfully logged out.'
     });
-    onNavigate('login');
+    navigate('/auth/login');
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 fixed w-full top-0 z-40">
+    <nav className="bg-gray-200 shadow-sm border-b border-gray-200 fixed w-full top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -47,18 +46,18 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
               {navigationItems.map(item => {
                 const Icon = item.icon;
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => onNavigate(item.id)}
+                  <Link
+                    key={item.path}
+                    to={item.path}
                     className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
-                      currentPage === item.id
+                      location.pathname === item.path
                         ? 'border-blue-500 text-gray-900'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
                     <Icon className="w-4 h-4 mr-2" />
                     {item.label}
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -69,13 +68,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             <div className="relative">
               <button
                 type="button"
-                className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-1 focus:ring-offset-0 focus:ring-blue-500 px-2 py-1 border border-gray-300"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 aria-expanded="false"
                 aria-haspopup="true"
               >
-                <div className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-gray-50 transition-colors duration-200">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-blue-600" />
                   </div>
                   <div className="hidden md:block text-left">
@@ -129,21 +128,19 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             {navigationItems.map(item => {
               const Icon = item.icon;
               return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    onNavigate(item.id);
-                    setIsMenuOpen(false);
-                  }}
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMenuOpen(false)}
                   className={`flex items-center w-full px-3 py-2 text-base font-medium transition-colors duration-200 ${
-                    currentPage === item.id
+                    location.pathname === item.path
                       ? 'bg-blue-50 border-r-4 border-blue-500 text-blue-700'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-3" />
                   {item.label}
-                </button>
+                </Link>
               );
             })}
           </div>

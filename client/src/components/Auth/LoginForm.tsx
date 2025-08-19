@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -87,24 +87,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-8 bg-white rounded-2xl shadow-lg p-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-2">
             Sign in to your account
           </h2>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-5">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="sr-only">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email address
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail size={20} color="currentColor" />
-                </div>
+              <div>
                 <input
                   id="email"
                   name="email"
@@ -112,9 +108,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNavigate }) => {
                   autoComplete="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`appearance-none rounded-md relative block w-full pl-10 pr-3 py-3 border ${
+                  className={`appearance-none rounded-md block w-full pr-3 pl-3 py-3 border ${
                     errors.email ? 'border-red-300' : 'border-gray-300'
-                  } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors duration-200`}
+                  } placeholder-gray-400 placeholder:pl-2 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors duration-200`}
                   placeholder="Email address"
                   aria-invalid={errors.email ? 'true' : 'false'}
                   aria-describedby={errors.email ? 'email-error' : undefined}
@@ -129,13 +125,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNavigate }) => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock size={20} color="currentColor" />
-                </div>
                 <input
                   id="password"
                   name="password"
@@ -143,9 +136,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNavigate }) => {
                   autoComplete="current-password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`appearance-none rounded-md relative block w-full pl-10 pr-10 py-3 border ${
+                  className={`appearance-none rounded-md block w-full pr-10 pl-3 py-3 border ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
-                  } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors duration-200`}
+                  } placeholder-gray-400 placeholder:pl-2 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors duration-200`}
                   placeholder="Password"
                   aria-invalid={errors.password ? 'true' : 'false'}
                   aria-describedby={errors.password ? 'password-error' : undefined}
@@ -175,7 +168,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onNavigate }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" className="mr-2" />

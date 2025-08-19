@@ -12,7 +12,8 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onView }) => {
-  const { user } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user;
 
   const canEdit = user?.role === 'admin' || task.assignedTo === user?.id;
   const statusInfo = TASK_STATUSES.find(s => s.value === task.status);
@@ -113,7 +114,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onView }) =
         {task.assignedUser && (
           <div className="flex items-center text-gray-500">
             <User className="w-4 h-4 mr-2" />
-            <span>{task.assignedUser.email}</span>
+            {Array.isArray(task.assignedUser)
+              ? task.assignedUser.map((u, idx) => (
+                  <span key={u.id || idx} className={idx > 0 ? 'ml-2' : ''}>{u.email}</span>
+                ))
+              : <span>{task.assignedUser.email}</span>
+            }
           </div>
         )}
 

@@ -1,16 +1,19 @@
 import React from 'react';
-import { Search, Filter, Calendar } from 'lucide-react';
+import { Search, Filter, Calendar, RefreshCw } from 'lucide-react';
 import { TaskFilters } from '../../types';
 import { TASK_STATUSES, TASK_PRIORITIES, mockUsers } from '../../utils/constants';
 import { useAuth } from '../../hooks/useAuth';
 
+
 interface FiltersProps {
   filters: TaskFilters;
   onFiltersChange: (filters: TaskFilters) => void;
+  onReload?: () => void;
 }
 
-const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange }) => {
-  const { user } = useAuth();
+const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange, onReload }) => {
+  const auth = useAuth();
+  const user = auth?.user;
 
   const handleFilterChange = (key: keyof TaskFilters, value: string) => {
     onFiltersChange({
@@ -21,14 +24,27 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange }) => {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
-      <div className="flex items-center mb-4">
-        <Filter className="w-5 h-5 text-gray-500 mr-2" />
-        <h3 className="text-lg font-medium text-gray-900">Filters</h3>
+      <div className="flex items-center mb-2 justify-between">
+        <div className="flex items-center">
+          <Filter className="w-5 h-5 text-gray-500 mr-2" />
+          <h3 className="text-lg font-medium text-gray-900">Filters</h3>
+        </div>
+        {typeof onReload === 'function' && (
+          <button
+            type="button"
+            onClick={onReload}
+            className="ml-2 p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-blue-600 focus:outline-none"
+            title="Reload tasks"
+          >
+            <RefreshCw className="w-5 h-5 transition-transform duration-300 hover:rotate-180" />
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Search */}
-        <div className="lg:col-span-2">
+
+      {/* First row: Search bar only */}
+      <div className="flex flex-col md:flex-row gap-4 mb-2">
+        <div className="flex-1">
           <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
             Search tasks
           </label>
@@ -46,7 +62,10 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange }) => {
             />
           </div>
         </div>
+      </div>
 
+  {/* Second row: All other filters, justified and responsive */}
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
         {/* Status Filter */}
         <div>
           <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
@@ -108,35 +127,35 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFiltersChange }) => {
             </select>
           </div>
         )}
-      </div>
 
-      {/* Date Range Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div>
-          <label htmlFor="dueDateFrom" className="block text-sm font-medium text-gray-700 mb-2">
-            <Calendar className="w-4 h-4 inline mr-1" />
-            Due date from
-          </label>
-          <input
-            type="date"
-            id="dueDateFrom"
-            value={filters.dueDateFrom || ''}
-            onChange={(e) => handleFilterChange('dueDateFrom', e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          />
-        </div>
-        <div>
-          <label htmlFor="dueDateTo" className="block text-sm font-medium text-gray-700 mb-2">
-            <Calendar className="w-4 h-4 inline mr-1" />
-            Due date to
-          </label>
-          <input
-            type="date"
-            id="dueDateTo"
-            value={filters.dueDateTo || ''}
-            onChange={(e) => handleFilterChange('dueDateTo', e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          />
+        {/* Date Range Filters */}
+        <div className="flex flex-col md:flex-row gap-2 col-span-1 md:col-span-2 xl:col-span-2">
+          <div className="flex-1 min-w-0">
+            <label htmlFor="dueDateFrom" className="block text-sm font-medium text-gray-700 mb-2">
+              <Calendar className="w-4 h-4 inline mr-1" />
+              Due date from
+            </label>
+            <input
+              type="date"
+              id="dueDateFrom"
+              value={filters.dueDateFrom || ''}
+              onChange={(e) => handleFilterChange('dueDateFrom', e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <label htmlFor="dueDateTo" className="block text-sm font-medium text-gray-700 mb-2">
+              <Calendar className="w-4 h-4 inline mr-1" />
+              Due date to
+            </label>
+            <input
+              type="date"
+              id="dueDateTo"
+              value={filters.dueDateTo || ''}
+              onChange={(e) => handleFilterChange('dueDateTo', e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -5,14 +5,12 @@ const mongoose = require('mongoose');
 const apiRoutes = require('./routes');
 const path = require('path');
 
-// Check for MongoDB URI
 const mongoUri = process.env.MONGODBURI;
 if (!mongoUri) {
   console.error('Error: MONGODBURI is not set in .env file.');
   process.exit(1);
 }
 
-// Connect to MongoDB
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -26,7 +24,11 @@ mongoose.connect(mongoUri, {
 const app = express();
 const PORT = 5000;
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

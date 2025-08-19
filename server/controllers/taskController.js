@@ -21,7 +21,7 @@ exports.getTaskById = async (req, res) => {
       .populate('assignedTo', 'email role')
       .populate('createdBy', 'email role');
     if (!task) return res.status(404).json({ error: 'Task not found.' });
-    if (req.user.role !== 'admin' && String(task.assignedTo._id) !== req.user.userId) {
+    if (req.user.role !== 'admin' && !task.assignedTo.map(u => String(u._id)).includes(req.user.userId)) {
       return res.status(403).json({ error: 'Access denied.' });
     }
     res.json(task);
@@ -39,7 +39,7 @@ exports.createTask = async (req, res) => {
       status,
       priority,
       dueDate,
-      assignedTo,
+      assignedTo: Array.isArray(assignedTo) ? assignedTo : [assignedTo],
       createdBy: req.user.userId
     });
     res.status(201).json(task);
@@ -52,8 +52,11 @@ exports.updateTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
-    if (req.user.role !== 'admin' && String(task.assignedTo) !== req.user.userId) {
+    if (req.user.role !== 'admin' && !task.assignedTo.map(u => String(u)).includes(req.user.userId)) {
       return res.status(403).json({ error: 'Access denied.' });
+    }
+    if (req.body.assignedTo && !Array.isArray(req.body.assignedTo)) {
+      req.body.assignedTo = [req.body.assignedTo];
     }
     Object.assign(task, req.body, { updatedAt: new Date() });
     await task.save();
@@ -67,7 +70,7 @@ exports.deleteTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
-    if (req.user.role !== 'admin' && String(task.assignedTo) !== req.user.userId) {
+    if (req.user.role !== 'admin' && !task.assignedTo.map(u => String(u)).includes(req.user.userId)) {
       return res.status(403).json({ error: 'Access denied.' });
     }
     await task.deleteOne();

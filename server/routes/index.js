@@ -5,7 +5,6 @@ const authRoutes = require('./auth');
 const userRoutes = require('./users');
 const taskRoutes = require('./tasks');
 
-// Health check
 router.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });

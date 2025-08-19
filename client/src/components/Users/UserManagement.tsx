@@ -14,8 +14,13 @@ const UserManagement: React.FC = () => {
   const auth = useAuth();
   const loggedInUser = auth && auth.user;
   const [users, setUsers] = useState<User[]>([]);
-  const [isUserFormOpen, setIsUserFormOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isUserFormOpen, setIsUserFormOpen] = useState(() => {
+    return localStorage.getItem('userMgmtIsUserFormOpen') === 'true';
+  });
+  const [selectedUser, setSelectedUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('userMgmtSelectedUser');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -76,6 +81,13 @@ const UserManagement: React.FC = () => {
     setSelectedUser(user);
     setIsUserFormOpen(true);
   };
+  // Persist modal state to localStorage
+  useEffect(() => {
+    localStorage.setItem('userMgmtIsUserFormOpen', String(isUserFormOpen));
+  }, [isUserFormOpen]);
+  useEffect(() => {
+    localStorage.setItem('userMgmtSelectedUser', selectedUser ? JSON.stringify(selectedUser) : '');
+  }, [selectedUser]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -255,24 +267,18 @@ const UserManagement: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {/* Show logged-in user at the top */}
               {loggedInUser && (
                 <tr key={loggedInUser.id} className="bg-blue-50 hover:bg-blue-100">
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">1</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
@@ -306,8 +312,9 @@ const UserManagement: React.FC = () => {
                 </tr>
               )}
               {/* Show other users */}
-              {otherUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+              {otherUsers.map((user, idx) => (
+                <tr key={(user as any).id || (user as any)._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{(loggedInUser ? 2 : 1) + idx}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">

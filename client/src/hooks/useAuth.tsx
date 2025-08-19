@@ -25,7 +25,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (token && storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          const res = await fetch(`${API_URL}/users/${parsedUser.id}`, {
+          const userId = parsedUser.userId || parsedUser.id;
+          const res = await fetch(`${API_URL}/users/${userId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
@@ -36,8 +37,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // If user not found or token invalid, logout
             logout();
           }
-        } catch {
+        } catch (err) {
           // On error, logout
+          console.error('[useAuth] Error fetching user:', err);
           logout();
         }
       }

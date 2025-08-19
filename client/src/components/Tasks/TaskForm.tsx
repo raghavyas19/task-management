@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Upload, FileText, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Upload, FileText, Calendar, Download, Eye } from 'lucide-react';
 import { Task } from '../../types';
-import { TASK_STATUSES, TASK_PRIORITIES, mockUsers } from '../../utils/constants';
+import { TASK_STATUSES, TASK_PRIORITIES } from '../../utils/constants';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
 import Modal from '../UI/Modal';
@@ -16,7 +16,9 @@ interface TaskFormProps {
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
-  const { user } = useAuth();
+  const auth = useAuth();
+  if (!auth) throw new Error('useAuth must be used within an AuthProvider');
+  const { user } = auth;
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
@@ -27,13 +29,48 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
     status: 'todo' as 'todo' | 'in-progress' | 'completed',
     priority: 'medium' as 'low' | 'medium' | 'high',
     dueDate: '',
-    assignedTo: user?.id || ''
+    assignedTo: [] as string[]
   });
+
+  const [allUsers, setAllUsers] = useState<{ id: string; email: string; role: string }[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  // Close dropdown on click outside
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [dropdownOpen]);
   
   const [files, setFiles] = useState<File[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<any[]>([]);
+  const [pendingDelete, setPendingDelete] = useState<string[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState<string>('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Initialize form with task data if editing
+  useEffect(() => {
+    // Fetch all users for assignment
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_URL}/users`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+  if (res.ok) setAllUsers(data.map((u: any) => ({ id: u._id, email: u.email, role: u.role })));
+      } catch {}
+    };
+    fetchUsers();
+  }, []);
+
   useEffect(() => {
     if (task) {
       setFormData({
@@ -42,19 +79,22 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
         status: task.status,
         priority: task.priority,
         dueDate: task.dueDate.split('T')[0],
-        assignedTo: task.assignedTo
+        assignedTo: Array.isArray(task.assignedTo) ? task.assignedTo.map((u: any) => (typeof u === 'string' ? u : u._id || u.id)) : []
       });
+      setExistingAttachments(task.attachments || []);
+      setPendingDelete([]);
     } else {
-      // Reset form for new task
       setFormData({
         title: '',
         description: '',
         status: 'todo',
         priority: 'medium',
         dueDate: '',
-        assignedTo: user?.id || ''
+        assignedTo: user?.id ? [user.id] : []
       });
       setFiles([]);
+      setExistingAttachments([]);
+      setPendingDelete([]);
       setErrors({});
     }
   }, [task, user, isOpen]);
@@ -78,12 +118,12 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
       newErrors.dueDate = 'Due date must be in the future';
     }
 
-    if (!formData.assignedTo) {
-      newErrors.assignedTo = 'Please assign the task to a user';
+    if (!formData.assignedTo || formData.assignedTo.length === 0) {
+      newErrors.assignedTo = 'Please assign the task to at least one user';
     }
 
-    if (files.length > 3) {
-      newErrors.files = 'Maximum 3 files allowed';
+    if (files.length + existingAttachments.length > 3) {
+      newErrors.files = 'Maximum 3 files allowed (including already uploaded)';
     }
 
     // Validate file types (only PDFs)
@@ -103,21 +143,33 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
 
     if (!validateForm()) return;
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      addToast({
+        type: 'error',
+        title: 'Not Authenticated',
+        message: 'You are not logged in. Please log in again to create or update a task.'
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
       let res, data;
+      let updatedTaskId = null;
       if (task) {
-        // Update task
-        res = await fetch(`${API_URL}/tasks/${task.id || task._id}`, {
+        // Update task (support both id and _id)
+        const taskId = task.id || (task as any)._id;
+        res = await fetch(`${API_URL}/tasks/${taskId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify(formData)
+          body: JSON.stringify({ ...formData, assignedTo: formData.assignedTo })
         });
+        updatedTaskId = taskId;
       } else {
         // Create task
         res = await fetch(`${API_URL}/tasks`, {
@@ -126,7 +178,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify(formData)
+          body: JSON.stringify({ ...formData, assignedTo: formData.assignedTo })
         });
       }
       data = await res.json();
@@ -136,8 +188,22 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
       // Handle file upload if files exist and task created/updated
       if (!task && files.length > 0 && data._id) {
         await uploadFiles(data._id);
+        updatedTaskId = data._id;
       } else if (task && files.length > 0) {
-        await uploadFiles(task.id || task._id);
+        const taskId = task.id || (task as any)._id;
+        await uploadFiles(taskId);
+      }
+
+      // After update, delete any attachments marked for deletion
+      if (updatedTaskId && pendingDelete.length > 0) {
+        for (const fileName of pendingDelete) {
+          try {
+            await fetch(`${API_URL}/tasks/${updatedTaskId}/attachments/${fileName}`, {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          } catch {}
+        }
       }
 
       addToast({
@@ -173,7 +239,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
     });
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -182,10 +248,36 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-    setFiles(selectedFiles);
+    // Only allow up to 3 files in total (existing + new)
+    const allowed = Math.max(0, 3 - existingAttachments.length);
+    setFiles(selectedFiles.slice(0, allowed));
     if (errors.files) {
       setErrors(prev => ({ ...prev, files: '' }));
     }
+  };
+  // Mark an existing attachment for deletion (UI only)
+  const removeExistingAttachment = (index: number) => {
+    const attachment = existingAttachments[index];
+  if (!attachment) return;
+  setPendingDelete(prev => [...prev, attachment.fileName]);
+  setExistingAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Download and preview for existing attachments
+  const handleFileDownload = (attachment: any) => {
+    const url = `${API_URL}/tasks/attachments/${attachment.fileName}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = attachment.fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleFilePreview = (attachment: any) => {
+    const url = `${API_URL}/tasks/attachments/${attachment.fileName}`;
+    setPreviewUrl(url);
+    setPreviewFileName(attachment.fileName);
   };
 
   const removeFile = (index: number) => {
@@ -310,33 +402,74 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
             )}
           </div>
 
-          <div>
+          <div className="relative" ref={dropdownRef}>
             <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-2">
               Assign To *
             </label>
-            <select
-              id="assignedTo"
-              value={formData.assignedTo}
-              onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-              className={`block w-full px-3 py-2 border ${
-                errors.assignedTo ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              disabled={user?.role !== 'admin' && !task}
-            >
-              <option value="">Select a user</option>
-              {mockUsers.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.email}
-                </option>
-              ))}
-            </select>
+            <div onClick={() => setDropdownOpen(true)} className="min-h-[42px] flex flex-wrap items-center gap-1 px-3 py-2 mb-2 border border-gray-300 rounded-md shadow-sm bg-white cursor-text focus-within:ring-blue-500 focus-within:border-blue-500 sm:text-sm">
+              {(() => {
+                const shown = formData.assignedTo.slice(0, 2);
+                const hiddenCount = formData.assignedTo.length - 2;
+                return (
+                  <>
+                    {shown.map(id => {
+                      const u = allUsers.find(u => u.id === id);
+                      return u ? (
+                        <span key={id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-1 flex items-center">
+                          {u.email}
+                          <button type="button" className="ml-1 text-blue-500 hover:text-red-500" onClick={e => {e.stopPropagation(); handleInputChange('assignedTo', formData.assignedTo.filter(uid => uid !== id));}}>&times;</button>
+                        </span>
+                      ) : null;
+                    })}
+                    {hiddenCount > 0 && (
+                      <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs mr-1">+{hiddenCount} users</span>
+                    )}
+                  </>
+                );
+              })()}
+              <input
+                type="text"
+                placeholder={formData.assignedTo.length === 0 ? 'Search users...' : ''}
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                className="flex-1 min-w-[80px] border-none outline-none bg-transparent"
+                onFocus={() => setDropdownOpen(true)}
+              />
+            </div>
+            {dropdownOpen && (
+              <div className="absolute left-0 right-0 z-10 bg-white border rounded-md max-h-40 overflow-y-auto shadow-lg">
+                {allUsers
+                  .filter(u => u.email.toLowerCase().includes(userSearch.toLowerCase()))
+                  .map(u => (
+                    <label key={u.id} className="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.assignedTo.includes(u.id)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            handleInputChange('assignedTo', [...formData.assignedTo, u.id]);
+                          } else {
+                            handleInputChange('assignedTo', formData.assignedTo.filter(id => id !== u.id));
+                          }
+                        }}
+                        className="mr-2"
+                        disabled={user?.role !== 'admin' && !task}
+                      />
+                      {u.email} <span className="ml-2 text-xs text-gray-400">({u.role})</span>
+                    </label>
+                  ))}
+                {allUsers.filter(u => u.email.toLowerCase().includes(userSearch.toLowerCase())).length === 0 && (
+                  <div className="px-3 py-2 text-gray-400 text-sm">No users found</div>
+                )}
+              </div>
+            )}
             {errors.assignedTo && (
               <p className="mt-1 text-sm text-red-600">{errors.assignedTo}</p>
             )}
           </div>
         </div>
 
-        {/* File Upload */}
+        {/* File Upload & Attachments */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <Upload className="w-4 h-4 inline mr-1" />
@@ -359,6 +492,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
                     multiple
                     accept=".pdf"
                     onChange={handleFileChange}
+                    disabled={existingAttachments.length >= 3}
                   />
                 </label>
                 <p className="pl-1">or drag and drop</p>
@@ -370,7 +504,51 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
             <p className="mt-1 text-sm text-red-600">{errors.files}</p>
           )}
 
-          {/* File List */}
+          {/* Existing Attachments (for update) */}
+          {existingAttachments.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {existingAttachments.map((attachment, index) => (
+                <div key={attachment.id || attachment.fileName} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-red-600" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{attachment.fileName}</p>
+                      <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => handleFilePreview(attachment)}
+                      className="text-gray-400 hover:text-green-600 transition-colors duration-200"
+                      title={`Preview ${attachment.fileName}`}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFileDownload(attachment)}
+                      className="text-gray-400 hover:text-blue-600 transition-colors duration-200"
+                      title={`Download ${attachment.fileName}`}
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeExistingAttachment(index)}
+                      className="text-gray-400 hover:text-red-600 transition-colors duration-200"
+                      title="Remove attachment (will be deleted after update)"
+                      disabled={isLoading}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* New Files List */}
           {files.length > 0 && (
             <div className="mt-4 space-y-2">
               {files.map((file, index) => (
@@ -397,6 +575,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
                       type="button"
                       onClick={() => removeFile(index)}
                       className="text-gray-400 hover:text-red-600 transition-colors duration-200"
+                      title="Remove file"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -405,6 +584,24 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, isOpen, onClose }) => {
               ))}
             </div>
           )}
+
+          {/* PDF Preview Modal */}
+          <Modal
+            isOpen={!!previewUrl}
+            onClose={() => setPreviewUrl(null)}
+            title={`Preview: ${previewFileName}`}
+            size="xl"
+          >
+            {previewUrl && (
+              <div className="w-full h-[70vh] flex items-center justify-center">
+                <iframe
+                  src={previewUrl}
+                  title="PDF Preview"
+                  className="w-full h-full border rounded shadow"
+                />
+              </div>
+            )}
+          </Modal>
         </div>
 
         {/* Form Actions */}

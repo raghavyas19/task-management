@@ -12,8 +12,8 @@ export interface Task {
   status: 'todo' | 'in-progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
   dueDate: string;
-  assignedTo: string;
-  assignedUser?: User;
+  assignedTo: string[];
+  assignedUser?: User | User[];
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -21,7 +21,7 @@ export interface Task {
 }
 
 export interface TaskAttachment {
-  id: string;
+  id?: string;
   fileName: string;
   fileSize: number;
   uploadedAt: string;
